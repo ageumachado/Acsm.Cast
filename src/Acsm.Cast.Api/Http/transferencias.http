@@ -1,0 +1,145 @@
+﻿@Acsm.Cast.Api_HostAddress = http://localhost:5000
+Content-Type: application/json
+
+### ============================================================================
+### 1. ESTADO INICIAL DAS CONTAS (Seed automático: A=100000, B=50000)
+### ============================================================================
+
+### Obter saldo inicial da Conta A (Esperado: 200 OK com saldoCentavos 100000)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/A
+Accept: application/json
+
+### Obter saldo inicial da Conta B (Esperado: 200 OK com saldoCentavos 50000)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/B
+Accept: application/json
+
+### Listar movimentações iniciais da Conta A (Esperado: 200 OK com array vazio [])
+GET {{Acsm.Cast.Api_HostAddress}}/contas/A/movimentacoes
+Accept: application/json
+
+
+### ============================================================================
+### 2. CENÁRIO DE SUCESSO (A -> B, 3000 centavos)
+### ============================================================================
+
+### Realizar transferência válida de 3000 centavos (Esperado: 201 Created com ID único)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "destino": "B",
+  "valorCentavos": 3000
+}
+
+### Verificar novo saldo da Conta A (Esperado: 200 OK com saldoCentavos 97000)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/A
+Accept: application/json
+
+### Verificar novo saldo da Conta B (Esperado: 200 OK com saldoCentavos 53000)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/B
+Accept: application/json
+
+### Listar histórico da Conta A (Esperado: 200 OK contendo a transferência de 3000)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/A/movimentacoes
+Accept: application/json
+
+### Listar histórico da Conta B (Esperado: 200 OK contendo a mesma transferência de 3000)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/B/movimentacoes
+Accept: application/json
+
+
+### ============================================================================
+### 3. CENÁRIO: SALDO INSUFICIENTE (HTTP 409 Conflict)
+### ============================================================================
+
+### Tentar transferir valor superior ao saldo de A (Esperado: 409 Conflict)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "destino": "B",
+  "valorCentavos": 200000
+}
+
+### Conferir se saldo de A permaneceu intacto após a falha (Esperado: 97000)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/A
+Accept: application/json
+
+
+### ============================================================================
+### 4. CENÁRIOS: CONTA INEXISTENTE (HTTP 404 Not Found)
+### ============================================================================
+
+### Consultar conta inexistente (Esperado: 404 Not Found)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/CONTA_INEXISTENTE
+Accept: application/json
+
+### Listar movimentações de conta inexistente (Esperado: 404 Not Found)
+GET {{Acsm.Cast.Api_HostAddress}}/contas/CONTA_INEXISTENTE/movimentacoes
+Accept: application/json
+
+### Transferir para conta destino inexistente (Esperado: 404 Not Found)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "destino": "Z",
+  "valorCentavos": 1000
+}
+
+
+### ============================================================================
+### 5. CENÁRIOS: ENTRADAS INVÁLIDAS (HTTP 400 Bad Request)
+### ============================================================================
+
+### Origem igual ao destino (Esperado: 400 Bad Request)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "destino": "A",
+  "valorCentavos": 1000
+}
+
+### Valor zero (Esperado: 400 Bad Request)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "destino": "B",
+  "valorCentavos": 0
+}
+
+### Valor negativo (Esperado: 400 Bad Request)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "destino": "B",
+  "valorCentavos": -500
+}
+
+### Valor fracionário - barrado pela tipagem inteira no binding (Esperado: 400 Bad Request)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "destino": "B",
+  "valorCentavos": 10.5
+}
+
+### Campo obrigatório ausente (Esperado: 400 Bad Request)
+POST {{Acsm.Cast.Api_HostAddress}}/transferencias
+Content-Type: application/json
+
+{
+  "origem": "A",
+  "valorCentavos": 1000
+}

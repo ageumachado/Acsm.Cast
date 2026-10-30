@@ -1,0 +1,6 @@
+@Acsm.Cast.Api_HostAddress = http://localhost:5031
+
+GET {{Acsm.Cast.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
