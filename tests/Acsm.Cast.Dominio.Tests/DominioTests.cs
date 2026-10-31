@@ -56,11 +56,14 @@ namespace Acsm.Cast.Dominio.Tests
             Assert.Equal(100000, conta.SaldoCentavos);
         }
 
-        [Fact]
-        public void CriarTransferencia_ComOrigemIgualAoDestino_DeveLancarRegraNegocioException()
+
+        [Theory]
+        [InlineData("A", "A")]
+        [InlineData("B", "B")]
+        public void CriarTransferencia_ComOrigemIgualAoDestino_DeveLancarRegraNegocioException(string origem, string destino)
         {
             // Arrange & Act & Assert
-            var ex = Assert.Throws<RegraNegocioException>(() => new Transferencia("A", "A", 3000));
+            var ex = Assert.Throws<RegraNegocioException>(() => new Transferencia(origem, destino, 3000));
             Assert.Contains("não pode ser igual", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
 

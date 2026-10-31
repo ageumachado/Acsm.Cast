@@ -130,3 +130,56 @@ Conforme solicitado no enunciado da Questão 2, a correção mínima em memória
 2. **Controle de Concorrência Pessimista:** Bloqueio de linha no banco de dados (`SELECT ... FOR UPDATE`) garantindo execução estritamente sequencial sobre a conta de origem.
 3. **Idempotência com Chaves Únicas:** Utilização de `Idempotency-Key` em cache distribuído (ex.: Redis) para prevenir execuções duplicadas originadas por retentativas de rede.
 4. **Outbox Pattern:** Envio confiável de notificações e histórico de eventos para corretores de mensageria (RabbitMQ/Kafka) para conciliação bancária desacoplada.
+
+
+---
+
+## 5. Princípios SOLID Aplicados
+
+A arquitetura do projeto foi concebida sob os preceitos de **Clean Architecture** e **DDD tático**, implementando integralmente os cinco princípios **SOLID**:
+
+### 1. **S — Single Responsibility Principle (Princípio da Responsabilidade Única)**
+*Cada classe possui apenas uma única razão para mudar.*
+- **Casos de Uso Atômicos:** Em vez de um serviço monolítico para todas as operações financeiras, cada operação possui um caso de uso dedicado:
+  - `RealizarTransferenciaUseCase`: orquestra a validação da requisição, aplicação das regras de débito/crédito e persistência transacional.
+  - `ObterContaUseCase`: responsável unicamente pela consulta e verificação de existência de uma conta.
+  - `ListarMovimentacoesUseCase`: restrito à consulta e projeção do histórico de transferências de uma conta.
+- **Entidades de Domínio com Regras Encapsuladas:**
+  - `Conta`: gerencia exclusivamente o saldo e suas invariantes (`Debitar`, `Creditar`, validações de valor positivo e saldo suficiente).
+  - `Transferencia`: modelo imutável responsável unicamente pela consistência dos dados do evento de transferência.
+- **Isolamento de Persistência:**
+  - `ContaRepository` e `TransferenciaRepository` respondem unicamente pelo acesso aos dados de suas respectivas entidades.
+  - `UnitOfWork` isola a responsabilidade de confirmação transacional atômica (`SaveChangesAsync`).
+- **Tratamento Global de Erros:**
+  - `GlobalExceptionHandler`: centraliza o tratamento e mapeamento de exceções para o padrão RFC 7807 (`ProblemDetails`), desonerando endpoints e regras de negócio de blocos `try/catch`.
+
+### 2. **O — Open/Closed Principle (Princípio Aberto/Fechado)**
+*Entidades de software devem estar abertas para extensão, mas fechadas para modificação.*
+- **Hierarquia de Exceções de Domínio:** A classe base abstrata `DominioException` permite a criação de novas exceções de negócio especializadas (`SaldoInsuficienteException`, `ContaNaoEncontradaException`, `RegraNegocioException`) sem alterar a classe base ou os consumidores de alto nível.
+- **Extensibilidade do Manipulador de Exceções:** O `GlobalExceptionHandler` utiliza *pattern matching* funcional no `switch expression`, permitindo mapear novas exceções para códigos HTTP sem alterar a estrutura do fluxo de erro.
+- **Evolução de Recursos:** Novos casos de uso (como cancelamento, estorno ou depósito) podem ser adicionados criando novos contratos e implementações sem alterar os casos de uso existentes.
+
+### 3. **L — Liskov Substitution Principle (Princípio da Substituição de Liskov)**
+*Subtipos devem ser substituíveis pelos seus tipos base sem quebrar o comportamento esperado.*
+- **Intercambiabilidade de Contratos:** As implementações concretas dos repositórios (`ContaRepository`, `TransferenciaRepository`) e de transação (`UnitOfWork`) cumprem estritamente os contratos `IContaRepository`, `ITransferenciaRepository` e `IUnitOfWork`. Podem ser substituídas por mocks em testes unitários ou por outros provedores de dados sem impacto nos casos de uso.
+- **Polimorfismo de Exceções:** Todas as exceções derivadas de `DominioException` respeitam integralmente o contrato de `Exception`, permitindo tratamento polimórfico na camada de apresentação.
+- **Contratos de Framework:** `GlobalExceptionHandler` cumpre a interface `IExceptionHandler` do ASP.NET Core, respeitando fielmente o ciclo de vida do pipeline HTTP.
+
+### 4. **I — Interface Segregation Principle (Princípio da Segregação de Interfaces)**
+*Clientes não devem ser forçados a depender de interfaces ou métodos que não utilizam.*
+- **Interfaces Granulares de Casos de Uso:** Em vez de uma interface monolítica `ITransferenciaService`, foram criadas interfaces específicas com método único:
+  - `IRealizarTransferenciaUseCase` (`ExecutarAsync`)
+  - `IObterContaUseCase` (`ExecutarAsync`)
+  - `IListarMovimentacoesUseCase` (`ExecutarAsync`)
+  - Nos endpoints da API, cada rota injeta via `[FromServices]` estritamente a interface necessária para aquela operação.
+- **Segregação de Repositórios e Transações:**
+  - `IContaRepository` contém apenas métodos pertinentes a contas (`ObterPorIdAsync`, `AtualizarAsync`).
+  - `ITransferenciaRepository` contém apenas operações de transferências (`AdicionarAsync`, `ListarPorContaAsync`).
+  - `IUnitOfWork` separa a responsabilidade de confirmação transacional (`CommitAsync`), impedindo que as interfaces de repositório sejam poluídas com métodos de controle de transação.
+
+### 5. **D — Dependency Inversion Principle (Princípio da Inversão de Dependência)**
+*Módulos de alto nível não devem depender de módulos de baixo nível; ambos devem depender de abstrações.*
+- **Domínio Livre de Dependências Tecnológicas:** O projeto `Acsm.Cast.Dominio` não possui referência ao EF Core, SQLite ou ASP.NET Core. As interfaces de persistência (`IContaRepository`, `ITransferenciaRepository`, `IUnitOfWork`) residem no Domínio.
+- **Infraestrutura Depende do Domínio:** A camada `Acsm.Cast.Infra` implementa as abstrações do Domínio, invertendo a dependência arquitetural tradicional.
+- **Injeção de Dependências por Construtor:** Os casos de uso recebem unicamente as abstrações via construtor, permitindo testes isolados sem necessidade de banco de dados real.
+- **Composition Root Isolado:** O registro das dependências é centralizado em módulos de extensão (`InfraDI` e `AplicacaoDI`) e orquestrado no `Program.cs`.
