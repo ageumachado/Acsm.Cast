@@ -1,6 +1,5 @@
 ﻿using Acsm.Cast.Dominio.Entidades;
 using Acsm.Cast.Dominio.Excecoes;
-using Xunit;
 
 namespace Acsm.Cast.Dominio.Tests
 {

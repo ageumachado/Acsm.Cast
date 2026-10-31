@@ -3,10 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Acsm.Cast.Infra.Contexto;
 
-public class CastDbContext : DbContext
+public class CastDbContext(DbContextOptions<CastDbContext> options) : DbContext(options)
 {
-    public CastDbContext(DbContextOptions<CastDbContext> options) : base(options) { }
-
     public DbSet<Conta> Contas => Set<Conta>();
     public DbSet<Transferencia> Transferencias => Set<Transferencia>();
 

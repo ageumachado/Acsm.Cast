@@ -4,15 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Acsm.Cast.Api.Middlewares;
 
-public class GlobalExceptionHandler : IExceptionHandler
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
-    {
-        _logger = logger;
-    }
-
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
@@ -29,7 +22,7 @@ public class GlobalExceptionHandler : IExceptionHandler
 
         if (statusCode == StatusCodes.Status500InternalServerError)
         {
-            _logger.LogError(exception, "Erro não tratado: {Mensagem}", exception.Message);
+            logger.LogError(exception, "Erro não tratado: {Mensagem}", exception.Message);
         }
 
         var problemDetails = new ProblemDetails

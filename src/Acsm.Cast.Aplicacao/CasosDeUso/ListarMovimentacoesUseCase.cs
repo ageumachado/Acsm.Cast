@@ -30,13 +30,12 @@ public class ListarMovimentacoesUseCase : IListarMovimentacoesUseCase
 
         var movimentacoes = await _transferenciaRepository.ListarPorContaAsync(conta.Id, cancellationToken);
 
-        return movimentacoes
+        return [.. movimentacoes
             .Select(m => new MovimentacaoResponse(
                 m.Id,
                 m.OrigemId,
                 m.DestinoId,
                 m.ValorCentavos,
-                m.CriadoEmUtc))
-            .ToList();
+                m.CriadoEmUtc))];
     }
 }

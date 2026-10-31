@@ -19,6 +19,7 @@ public class ObterContaUseCase : IObterContaUseCase
             throw new RegraNegocioException("O identificador da conta deve ser informado.");
 
         var contaId = id.Trim().ToUpperInvariant();
+
         var conta = await _contaRepository.ObterPorIdAsync(contaId, cancellationToken)
             ?? throw new ContaNaoEncontradaException(contaId);
 
