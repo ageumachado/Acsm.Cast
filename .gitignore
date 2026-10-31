@@ -427,3 +427,5 @@ FodyWeavers.xsd
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
 /src/Acsm.Cast.Api/cast_transferencias.db
+/src/Acsm.Cast.Api/cast_transferencias.db-shm
+/src/Acsm.Cast.Api/cast_transferencias.db-wal
