@@ -4,8 +4,8 @@
   </Folder>
   <Project Path="src/Acsm.Cast.Api/Acsm.Cast.Api.csproj" Id="b418393c-5e83-42ad-a815-6ad8206e3f99" />
   <Project Path="src/Acsm.Cast.Aplicacao/Acsm.Cast.Aplicacao.csproj" Id="c3ad5de5-e260-4bf2-91ac-95cced66bb1d" />
-  <Project Path="src/Acsm.Cast.Dominio.Tests/Acsm.Cast.Dominio.Tests.csproj" Id="85ab6d74-f8ca-4a29-a0b9-de1cca7b7180" />
   <Project Path="src/Acsm.Cast.Dominio/Acsm.Cast.Dominio.csproj" Id="994b3222-031d-44d8-91fe-f1f0939b4cdf" />
   <Project Path="src/Acsm.Cast.Infra/Acsm.Cast.Infra.csproj" Id="399e9601-c439-4e1e-bc32-e71244855ba8" />
-  <Project Path="src/Acsm.Cast.Questao2.Tests/Acsm.Cast.Questao2.Tests.csproj" Id="57b2bfc0-b4c5-412e-a869-2ada98262535" />
+  <Project Path="tests/Acsm.Cast.Dominio.Tests/Acsm.Cast.Dominio.Tests.csproj" />
+  <Project Path="tests/Acsm.Cast.Questao2.Tests/Acsm.Cast.Questao2.Tests.csproj" />
 </Solution>
